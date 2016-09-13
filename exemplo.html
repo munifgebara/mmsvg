@@ -1,0 +1,510 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SVG Drag and Drop Test</title>
+  <script src="angular.min.js"></script>
+  <style>
+    svg text {
+      -webkit-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+    }
+    svg text::selection {
+      background: none;
+    }
+
+    svg g {
+      cursor: move; /* fallback if grab cursor is unsupported */
+      cursor: grab;
+      cursor: -moz-grab;
+      cursor: -webkit-grab;
+    }
+
+ /* (Optional) Apply a "closed-hand" cursor during drag operation. */
+    svg g:active {
+        cursor: grabbing;
+        cursor: -moz-grabbing;
+        cursor: -webkit-grabbing;
+    }
+  </style>
+</head>
+<body ng-app="dadApp">
+  <div  ng-controller="dadController">
+    <div>
+      <button ng-click="adiciona()">Adiciona</button>
+
+    </div>
+
+    <svg width="100%" height="600" id="svgDesenho" draggable="false">
+    </svg>
+
+    <pre>
+      {{grafico | json}}
+    </pre>
+
+  </div>
+  <script>
+
+  var app = angular.module('dadApp', []);
+
+
+
+  app.controller('dadController', function($scope) {
+    var selectedElement = 0;
+    var currentX = 0;
+    var currentY = 0;
+    var currentMatrix = 0;
+    var associations = [];
+    var svgEntities={};
+
+    $scope.gClone={};
+    $scope.grafico ={
+
+        "id": 1,
+        "oi": null,
+        "version": 2,
+        "generatorProject": true,
+        "name": "Locadora",
+        "groupId": "br.com",
+        "artifactId": "locadora",
+        "projectVersion": "1.0",
+        "description": "Sistema para locação de filmes",
+        "defaultPackage": "br.com.locadora.model",
+        "rinaArcheType": null,
+        "packages": [
+          {
+            "id": 1,
+            "oi": null,
+            "version": 8,
+            "name": "br.com.locadora.domain.model",
+            "description": null,
+            "rinaEntities": [
+              {
+                x:192,
+                y:41,
+                "id": 1,
+                "oi": null,
+                "version": 0,
+                "name": "Cliente",
+                "generateApi": true,
+                "generateApplication": true,
+                "generatePresentation": true,
+                "fields": [
+                  {
+                    "id": 1,
+                    "oi": null,
+                    "version": 0,
+                    "name": "name",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 1,
+                      "oi": null,
+                      "description": "String"
+                    }
+                  }
+                ]
+              },
+              {
+                x:233,
+                y:318,
+                "id": 2,
+                "oi": null,
+                "version": 0,
+                "name": "Filme",
+                "generateApi": true,
+                "generateApplication": true,
+                "generatePresentation": true,
+                "fields": [
+                  {
+                    "id": 2,
+                    "oi": null,
+                    "version": 0,
+                    "name": "description",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 2,
+                      "oi": null,
+                      "description": "String"
+                    }
+                  },
+                  {
+                    "id": 3,
+                    "oi": null,
+                    "version": 0,
+                    "name": "value",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 3,
+                      "oi": null,
+                      "description": "BigDecimal"
+                    }
+                  },
+                  {
+                    "id": 4,
+                    "oi": null,
+                    "version": 0,
+                    "name": "name",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 4,
+                      "oi": null,
+                      "description": "String"
+                    }
+                  }
+                ]
+              },
+              {
+                x:720,
+                y:143,
+                "id": 3,
+                "oi": null,
+                "version": 0,
+                "name": "Locacao",
+                "generateApi": true,
+                "generateApplication": true,
+                "generatePresentation": true,
+                "fields": [
+                  {
+                    "id": 5,
+                    "oi": null,
+                    "version": 0,
+                    "name": "dateLocation",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 5,
+                      "oi": null,
+                      "description": "Date"
+                    }
+                  },
+                  {
+                    "id": 6,
+                    "oi": null,
+                    "version": 0,
+                    "name": "cliente",
+                    "domain": {
+                      "type": "RinaAssociation",
+                      "id": 6,
+                      "oi": null,
+                      "sourceEntity": {
+                        "id": 3,
+                        "oi": null,
+                        "version": 0,
+                        "name": "Locacao",
+                        "generateApi": true,
+                        "generateApplication": true,
+                        "generatePresentation": true
+                      },
+                      "destinationEntity": {
+                        "id": 1,
+                        "oi": null,
+                        "version": 0,
+                        "name": "Cliente",
+                        "generateApi": true,
+                        "generateApplication": true,
+                        "generatePresentation": true
+                      },
+                      "rinaMultiplicity": "MANYTOONE",
+                      "rinaMultiplicityType": "LIST"
+                    }
+                  },
+                  {
+                    "id": 7,
+                    "oi": null,
+                    "version": 0,
+                    "name": "subTotal",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 7,
+                      "oi": null,
+                      "description": "BigDecimal"
+                    }
+                  },
+                  {
+                    "id": 8,
+                    "oi": null,
+                    "version": 0,
+                    "name": "filmes",
+                    "domain": {
+                      "type": "RinaAssociation",
+                      "id": 8,
+                      "oi": null,
+                      "sourceEntity": {
+                        "id": 3,
+                        "oi": null,
+                        "version": 0,
+                        "name": "Locacao",
+                        "generateApi": true,
+                        "generateApplication": true,
+                        "generatePresentation": true
+                      },
+                      "destinationEntity": {
+                        "id": 2,
+                        "oi": null,
+                        "version": 0,
+                        "name": "Filme",
+                        "generateApi": true,
+                        "generateApplication": true,
+                        "generatePresentation": true
+                      },
+                      "rinaMultiplicity": "MANYTOMANY",
+                      "rinaMultiplicityType": "SET"
+                    }
+                  },
+                  {
+                    "id": 9,
+                    "oi": null,
+                    "version": 0,
+                    "name": "status",
+                    "domain": {
+                      "type": "EnumDomainType",
+                      "id": 9,
+                      "oi": null,
+                      "rinaEnum": {
+                        "id": 1,
+                        "oi": null,
+                        "name": "StatusLocacao",
+                        "values": [
+                          {
+                            "id": 1,
+                            "oi": null,
+                            "value": "FINALIZADO",
+                            "description": null
+                          },
+                          {
+                            "id": 2,
+                            "oi": null,
+                            "value": "LOCADO",
+                            "description": null
+                          },
+                          {
+                            "id": 3,
+                            "oi": null,
+                            "value": "CANCELADO",
+                            "description": null
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": 10,
+                    "oi": null,
+                    "version": 0,
+                    "name": "description",
+                    "domain": {
+                      "type": "JavaType",
+                      "id": 10,
+                      "oi": null,
+                      "description": "String"
+                    }
+                  }
+                ]
+              }
+            ],
+            "enums": [
+              {
+                "id": 1,
+                "oi": null,
+                "name": "StatusLocacao",
+                "values": [
+                  {
+                    "id": 1,
+                    "oi": null,
+                    "value": "FINALIZADO",
+                    "description": null
+                  },
+                  {
+                    "id": 2,
+                    "oi": null,
+                    "value": "LOCADO",
+                    "description": null
+                  },
+                  {
+                    "id": 3,
+                    "oi": null,
+                    "value": "CANCELADO",
+                    "description": null
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+
+    makeSVG=function (parent, tag, attrs, teste) {
+      var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (var k in attrs){
+        if(k=="xlink:href"){
+          el.setAttributeNS('http://www.w3.org/1999/xlink', 'href', attrs[k]);
+        }else{
+          el.setAttribute(k, attrs[k]);
+        }
+      }
+
+      if(tag == 'line' && !teste){
+        parent.insertBefore(el, parent.firstChild);
+      }else {
+        parent.appendChild(el);
+      }
+      return el;
+    }
+
+    desenhaEntidade=function(e,i){
+
+      var grupo=makeSVG(desenho,"g");
+
+      svgEntities[e.name]=grupo;
+
+      var rectHeight = 30
+      var rect = makeSVG(grupo,"rect",{x:e.x, y:e.y, width:150, id:e.id, style:"stroke: black; fill: darkseagreen;"});
+      var text = makeSVG(grupo,"text",{x:e.x+15, y:e.y+20, style: "pointer-events: none;"});
+      makeSVG(grupo,"line",{x1:e.x, y1:e.y+25,x2:e.x+150,y2:e.y+25, style:"pointer-events: none;stroke:black;stroke-width:1;"}, true);
+      text.innerHTML=e.name;
+
+      var tf="";
+      e.fields.forEach(function(f,i){
+           rectHeight+=16
+           var ts=makeSVG(grupo,"text",{x:e.x+15, y:e.y+40+i*15, height:10, id: f.id, width:75,
+              style: "pointer-events: none;font-family: sans-serif;font-size: 12px;"});
+
+           ts.innerHTML=f.name;
+           ts.setAttribute("unselectable","on")
+           if (f.domain.type==="RinaAssociation"){
+               associations.push(
+                 {
+                  sourceEntity:f.domain.sourceEntity.name,
+                  destinationEntity:f.domain.destinationEntity.name,
+                  grupo : grupo,
+                  name: f.name,
+                  multiplicity:f.domain.rinaMultiplicity
+               });
+           }
+       });
+      rect.style.height = rectHeight
+      var point = makeSVG(grupo,"rect",{x:e.x+150, y:e.y+(rectHeight/2), width:10, height: 10, style:"stroke: gray; fill: gray;"});
+      grupo.setAttributeNS(null, "transform", "matrix(1 0 0 1 0 0)");
+
+      rect.onmousedown=selectElement;
+      rect.onmouseout=deselectElement;
+      rect.onmouseup=deselectElement;
+
+      point.onmousedown = selectPoint
+
+      grupo.model=e;
+    }
+
+    function deselectPoint(evt){
+        console.log(evt)
+        console.log(evt.target.parentElement.model)
+    }
+
+    function selectPoint(evt){
+        currentX = evt.clientX;
+        currentY = evt.clientY;
+        selectedElement = evt.target.parentElement;
+        selectedElement.onmouseup=deselectPoint;
+        console.log(selectedElement.model)
+    }
+
+    desenhaAssociacoes=function(a,i){
+        var source=svgEntities[a.sourceEntity];
+        var destination=svgEntities[a.destinationEntity];
+        var rect = a.grupo.getElementsByTagName('rect')[0]
+        var xRect = rect.width.animVal.value / 2;
+        var yRect = rect.height.animVal.value + 20;
+        var svg = document.getElementById("svgDesenho");
+        var ts = makeSVG(svg,"text",{x:(source.model.x+destination.model.x) / 2, y:(source.model.y+destination.model.y) /2,
+          style: "pointer-events: none;font-family: sans-serif;font-size: 12px;"});
+        ts.innerHTML=a.multiplicity;
+
+        // var teste = makeSVG(svg, "text", {x: (source.model.x+destination.model.x), y: (source.model.y+destination.model.y) /2});
+        // teste.innerHTML = '@';
+
+        makeSVG(svg,"line",{x1:source.model.x+xRect, y1:source.model.y+yRect,x2:destination.model.x+xRect,y2:destination.model.y+yRect, style:"pointer-events: none;stroke:black;stroke-width:1;"});
+    }
+
+    desenhaPackage=function(p,i){
+      p.rinaEntities.forEach(desenhaEntidade);
+      associations.forEach(desenhaAssociacoes);
+    }
+
+
+    limpaLinhas = function(){
+        var element = document.getElementById("svgDesenho");
+        var count = 0;
+        for(child in element.childNodes){
+          if(element.childNodes[count] && (element.childNodes[count].nodeName == 'line' || element.childNodes[count].nodeName == 'text')){
+            element.removeChild(element.childNodes[count]);
+          }
+          count++;
+        }
+    }
+
+    desenha=function(g){
+      associations = [];
+      svgEntities={};
+      var element = document.getElementById("svgDesenho");
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+      g.packages.forEach(desenhaPackage);
+    }
+
+
+    function moveElement(evt){
+      se = evt.target.parentElement;
+      dx = evt.clientX - currentX;
+      dy = evt.clientY - currentY;
+
+      currentMatrix[4] += dx;
+      currentMatrix[5] += dy;
+      newMatrix = "matrix(" + currentMatrix.join(' ') + ")";
+
+      se.setAttributeNS(null, "transform", newMatrix);
+
+
+      se.model.x+=dx;
+      se.model.y+=dy;
+      currentX = evt.clientX;
+      currentY = evt.clientY;
+      selectedElement = evt.target.parentElement;
+      setTimeout(function(){
+        limpaLinhas();
+        associations.forEach(desenhaAssociacoes);
+        $scope.$apply();
+      },20);
+    }
+
+    function selectElement(evt) {
+      currentX = evt.clientX;
+      currentY = evt.clientY;
+      //TESTAR SE É O GRUPO OOU O ELEMENTO
+      selectedElement = evt.target.parentElement;
+      currentMatrix = selectedElement.getAttributeNS(null, "transform").slice(7,-1).split(' ');
+      for(var i=0; i<currentMatrix.length; i++) {
+        currentMatrix[i] = parseFloat(currentMatrix[i]);
+      }
+      selectedElement.onmousemove=moveElement;
+
+    }
+    function deselectElement(evt) {
+      selectedElement = evt.target.parentElement;
+      selectedElement.onmousemove=null;
+    }
+
+    $scope.adiciona=function(){
+      var entities = $scope.grafico.packages[0].rinaEntities;
+      entities.push({x:Math.random()*600,y:Math.random()*600, name: 'Outra entidade', fields: []})
+      desenha($scope.grafico);
+    }
+
+
+    var desenho=document.getElementById("svgDesenho");
+    desenha($scope.grafico);
+  });
+  </script>
+</body>
+</html>
