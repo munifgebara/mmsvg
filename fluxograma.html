@@ -1,0 +1,264 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>SVG Drag and Drop Test</title>
+  <script src="angular.min.js"></script>
+  <style>
+  svg text {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  svg text::selection {
+    background: none;
+  }
+
+  svg g {
+    cursor: move; /* fallback if grab cursor is unsupported */
+    cursor: grab;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+  }
+
+  /* (Optional) Apply a "closed-hand" cursor during drag operation. */
+  svg g:active {
+    cursor: grabbing;
+    cursor: -moz-grabbing;
+    cursor: -webkit-grabbing;
+  }
+  </style>
+</head>
+<body ng-app="dadApp">
+  <div  ng-controller="dadController">
+    <div>
+      <button ng-click="adiciona()">Adiciona</button>
+
+    </div>
+
+    <svg width="100%" height="900" id="svgDesenho" draggable="false">
+    </svg>
+
+    <pre>
+      {{fluxograma | json}}
+    </pre>
+
+  </div>
+  <script>
+
+  var app = angular.module('dadApp', []);
+
+
+
+  app.controller('dadController', function($scope) {
+    var selectedElement = 0;
+    var currentX = 0;
+    var currentY = 0;
+    var currentMatrix = 0;
+    var conectores = [];
+    var simbolos={};
+
+    $scope.fluxograma ={
+
+      simbolos:[
+        {id:"S1",tipo:"inicio",x:120,y:50,texto:"Início",emExecucao:false},
+        {id:"S2",tipo:"entrada",x:120,y:150,texto:"Digite a temperatura em F",variavel:"F",emExecucao:true},
+        {id:"S3",tipo:"processamento",x:120,y:250,comando:"C=(F-32)*5/9",emExecucao:false},
+        {id:"S4",tipo:"saida",x:120,y:350,variavel:"X",texto:"A temperatura em C é",emExecucao:false},
+        {id:"S5",tipo:"decisao",x:120,y:450,teste:"C>25",emExecucao:false},
+        {id:"S6",tipo:"saida",x:320,y:450,variavel:"",texto:"FRIO",emExecucao:false},
+        {id:"S7",tipo:"saida",x:120,y:550,variavel:"",texto:"CALOR",emExecucao:false},
+        {id:"S99",tipo:"fim",x:120,y:650,texto:"Fim",emExecucao:false}
+      ],
+
+      conectores:[
+        {tipo:"conector",origem:"S1",destino:"S2"},
+        {tipo:"conector",origem:"S2",destino:"S3"},
+        {tipo:"conector",origem:"S3",destino:"S4"},
+        {tipo:"conector",origem:"S4",destino:"S5"},
+        {tipo:"conector",origem:"S5",destino:"S6"},
+        {tipo:"conector",origem:"S6",destino:"S99"},
+        {tipo:"conector",origem:"S5",destino:"S7"},
+        {tipo:"conector",origem:"S7",destino:"S99"},
+      ]
+    };
+
+    makeSVG=function (parent, tag, attrs, before) {
+      var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (var k in attrs){
+        if(k=="xlink:href"){
+          el.setAttributeNS('http://www.w3.org/1999/xlink', 'href', attrs[k]);
+        }else{
+          el.setAttribute(k, attrs[k]);
+        }
+      }
+      if(before){
+        parent.insertBefore(el, parent.firstChild);
+      }else {
+        parent.appendChild(el);
+      }
+      return el;
+    }
+
+    desenhaSimbolo=function(e,i){
+      var grupo=makeSVG(desenho,"g");
+      simbolos[e.id]=grupo;
+      var texto=e.id;
+      var simbolo={};
+      var cor="darkseagreen"
+      if (e.emExecucao){
+        cor="red";
+      }
+      if (e.tipo==="processamento") {
+        texto=e.comando;
+      }
+      else if (e.tipo==="entrada") {
+        texto=e.texto+" ["+e.variavel+ "]";
+      }
+      else if (e.tipo==="saida") {
+        texto=e.texto+" ["+e.variavel+ "]";
+      }
+      else if (e.tipo==="decisao") {
+        texto=e.teste;
+      }
+      else{
+        texto=e.texto;
+      }
+      var text = makeSVG(grupo,"text",{'text-anchor':'middle',x:e.x, y:e.y, style: "pointer-events: none;text-anchor:middle; font-family:sans-serif"},false);
+      text.innerHTML=texto;
+
+      var tamanho=text.getComputedTextLength()+10;
+      var tamanho2=tamanho/2;
+
+
+      switch (e.tipo) {
+        case "inicio":
+        case "fim":
+        simbolo = makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y, rx:tamanho, ry:25, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        break;
+
+        case "entrada":
+        var pontos=(e.x-tamanho2+5)+","+(e.y-25)+" "+(e.x+tamanho2+5)+","+(e.y-25)+" "+(e.x+tamanho2-5)+","+(e.y+25)+" "+(e.x-tamanho2-5)+","+(e.y+25);
+        simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        break;
+
+        case "saida":
+        var pontos=(e.x-tamanho2)+","+(e.y-25)+" "+(e.x+tamanho2)+","+(e.y-25)+
+        " "+(e.x+tamanho2)+","+(e.y+15)+
+        " "+(e.x+tamanho2/2)+","+(e.y+25)+
+        " "+(e.x)+","+(e.y+25)+
+        " "+(e.x-tamanho2/2)+","+(e.y+25)+
+        " "+(e.x-tamanho2)+","+(e.y+35);
+        simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        break;
+
+        case "processamento":
+        simbolo = makeSVG(grupo,"rect",{x:e.x-tamanho2, y:e.y-25, width:tamanho, height:50, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        break;
+
+        case "decisao":
+        var pontos=(e.x)+","+(e.y-35)+" "+(e.x+tamanho2+30)+","+(e.y)+" "+(e.x)+","+(e.y+35)+" "+(e.x-tamanho2-30)+","+(e.y);
+        simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        break;
+
+        break;
+      }
+
+
+
+
+
+      grupo.setAttributeNS(null, "transform", "matrix(1 0 0 1 0 0)");
+
+      simbolo.onmousedown=selectElement;
+      simbolo.onmouseout=deselectElement;
+      simbolo.onmouseup=deselectElement;
+
+      grupo.model=e;
+    }
+
+    desenhaConectores=function(a,i){
+      var origem=simbolos[a.origem];
+      var destino=simbolos[a.destino];
+      var conector=makeSVG(desenho,"line",{x1:origem.model.x, y1:origem.model.y,x2:destino.model.x,y2:destino.model.y,style:"pointer-events: none;stroke:black;stroke-width:1;"},true);
+      conector.tipo="conector";
+    }
+
+
+    limpaLinhas = function(){
+      var element = document.getElementById("svgDesenho");
+      var count = 0;
+      for(child in element.childNodes){
+        if(element.childNodes[count] && (element.childNodes[count].tipo == 'conector' )){
+          element.removeChild(element.childNodes[count]);
+        }
+        count++;
+      }
+    }
+
+    desenha=function(g){
+      conectores = [];
+      simbolos={};
+      var element = document.getElementById("svgDesenho");
+      while (element.firstChild) {
+        element.removeChild(element.firstChild);
+      }
+      g.simbolos.forEach(desenhaSimbolo);
+      g.conectores.forEach(desenhaConectores);
+    }
+
+
+    function moveElement(evt){
+      se = evt.target.parentElement;
+      dx = evt.clientX - currentX;
+      dy = evt.clientY - currentY;
+
+      currentMatrix[4] += dx;
+      currentMatrix[5] += dy;
+      newMatrix = "matrix(" + currentMatrix.join(' ') + ")";
+
+      se.setAttributeNS(null, "transform", newMatrix);
+
+      se.model.x+=dx;
+      se.model.y+=dy;
+      currentX = evt.clientX;
+      currentY = evt.clientY;
+      selectedElement = evt.target.parentElement;
+      setTimeout(function(){
+        limpaLinhas();
+        $scope.fluxograma.conectores.forEach(desenhaConectores);
+        $scope.$apply();
+      },20);
+    }
+
+    function selectElement(evt) {
+      currentX = evt.clientX;
+      currentY = evt.clientY;
+      //TESTAR SE É O GRUPO OOU O ELEMENTO
+      selectedElement = evt.target.parentElement;
+      currentMatrix = selectedElement.getAttributeNS(null, "transform").slice(7,-1).split(' ');
+      for(var i=0; i<currentMatrix.length; i++) {
+        currentMatrix[i] = parseFloat(currentMatrix[i]);
+      }
+      selectedElement.onmousemove=moveElement;
+
+    }
+    function deselectElement(evt) {
+      selectedElement = evt.target.parentElement;
+      selectedElement.onmousemove=null;
+    }
+
+    $scope.adiciona=function(){
+      var entities = $scope.grafico.packages[0].rinaEntities;
+      entities.push({x:Math.random()*600,y:Math.random()*600, name: 'Outra entidade', fields: []})
+      desenha($scope.grafico);
+    }
+
+
+    var desenho=document.getElementById("svgDesenho");
+    desenha($scope.fluxograma);
+  });
+  </script>
+</body>
+</html>
