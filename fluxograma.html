@@ -34,16 +34,15 @@
   <div  ng-controller="dadController">
     <div>
       <button ng-click="adiciona()">Adiciona</button>
+      <button ng-click="passo()">Passo</button>
+      <h1>Variáveis:{{variaveis}}</h1>
+
 
     </div>
 
     <svg width="100%" height="900" id="svgDesenho" draggable="false">
+
     </svg>
-
-    <pre>
-      {{fluxograma | json}}
-    </pre>
-
   </div>
   <script>
 
@@ -62,25 +61,14 @@
     $scope.fluxograma ={
 
       simbolos:[
-        {id:"S1",tipo:"inicio",x:120,y:50,texto:"Início",emExecucao:false},
-        {id:"S2",tipo:"entrada",x:120,y:150,texto:"Digite a temperatura em F",variavel:"F",emExecucao:true},
-        {id:"S3",tipo:"processamento",x:120,y:250,comando:"C=(F-32)*5/9",emExecucao:false},
-        {id:"S4",tipo:"saida",x:120,y:350,variavel:"X",texto:"A temperatura em C é",emExecucao:false},
-        {id:"S5",tipo:"decisao",x:120,y:450,teste:"C>25",emExecucao:false},
-        {id:"S6",tipo:"saida",x:320,y:450,variavel:"",texto:"FRIO",emExecucao:false},
-        {id:"S7",tipo:"saida",x:120,y:550,variavel:"",texto:"CALOR",emExecucao:false},
+        {id:"S1",tipo:"inicio",x:120,y:50,texto:"Início",emExecucao:false,proximo:"S2"},
+        {id:"S2",tipo:"entrada",x:120,y:150,texto:"Digite a temperatura em F",variavel:"F",emExecucao:false,proximo:"S3"},
+        {id:"S3",tipo:"processamento",x:120,y:250,comando:"C=(F-32)*5/9",emExecucao:false,proximo:"S4"},
+        {id:"S4",tipo:"saida",x:120,y:350,variavel:"C",texto:"A temperatura em C é",emExecucao:false,proximo:"S5"},
+        {id:"S5",tipo:"decisao",x:120,y:450,teste:"C>25",emExecucao:false,proximo:"S7",proximoFalso:"S6"},
+        {id:"S6",tipo:"saida",x:120,y:550,variavel:"",texto:"FRIO",emExecucao:false,proximo:"S99"},
+        {id:"S7",tipo:"saida",x:320,y:550,variavel:"",texto:"CALOR",emExecucao:false,proximo:"S99"},
         {id:"S99",tipo:"fim",x:120,y:650,texto:"Fim",emExecucao:false}
-      ],
-
-      conectores:[
-        {tipo:"conector",origem:"S1",destino:"S2"},
-        {tipo:"conector",origem:"S2",destino:"S3"},
-        {tipo:"conector",origem:"S3",destino:"S4"},
-        {tipo:"conector",origem:"S4",destino:"S5"},
-        {tipo:"conector",origem:"S5",destino:"S6"},
-        {tipo:"conector",origem:"S6",destino:"S99"},
-        {tipo:"conector",origem:"S5",destino:"S7"},
-        {tipo:"conector",origem:"S7",destino:"S99"},
       ]
     };
 
@@ -136,11 +124,13 @@
         case "inicio":
         case "fim":
         simbolo = makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y, rx:tamanho, ry:25, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        conectores=[makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y+25, rx:5, ry:5, id:e.id+'Saida', style:"stroke: black; fill: black;"},true)];
         break;
 
         case "entrada":
         var pontos=(e.x-tamanho2+5)+","+(e.y-25)+" "+(e.x+tamanho2+5)+","+(e.y-25)+" "+(e.x+tamanho2-5)+","+(e.y+25)+" "+(e.x-tamanho2-5)+","+(e.y+25);
         simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        conectores=[makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y-25, rx:5, ry:5, id:e.id+'Entrada', style:"stroke: black; fill: black;"},true),makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y+25, rx:5, ry:5, id:e.id+'Saida', style:"stroke: black; fill: black;"},true)];
         break;
 
         case "saida":
@@ -151,24 +141,25 @@
         " "+(e.x-tamanho2/2)+","+(e.y+25)+
         " "+(e.x-tamanho2)+","+(e.y+35);
         simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        conectores=[makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y-25, rx:5, ry:5, id:e.id+'Entrada', style:"stroke: black; fill: black;"},true),makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y+25, rx:5, ry:5, id:e.id+'Saida', style:"stroke: black; fill: black;"},true)];
         break;
 
         case "processamento":
         simbolo = makeSVG(grupo,"rect",{x:e.x-tamanho2, y:e.y-25, width:tamanho, height:50, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
+        conectores=[makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y-25, rx:5, ry:5, id:e.id+'Entrada', style:"stroke: black; fill: black;"},true),makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y+25, rx:5, ry:5, id:e.id+'Saida', style:"stroke: black; fill: black;"},true)];
         break;
 
         case "decisao":
         var pontos=(e.x)+","+(e.y-35)+" "+(e.x+tamanho2+30)+","+(e.y)+" "+(e.x)+","+(e.y+35)+" "+(e.x-tamanho2-30)+","+(e.y);
         simbolo = makeSVG(grupo,"polygon",{points:pontos, id:e.id, style:"stroke: black; fill: "+cor+";"},true);
-        break;
+        conectores=[
+          makeSVG(grupo,"ellipse",{cx:(e.x+tamanho2+30), cy:e.y, rx:5, ry:5, id:e.id+'SaidaFalsa', style:"stroke: black; fill: black;"},true),
+          makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y-35, rx:5, ry:5, id:e.id+'Entrada', style:"stroke: black; fill: black;"},true),
+          makeSVG(grupo,"ellipse",{cx:e.x, cy:e.y+35, rx:5, ry:5, id:e.id+'Saida', style:"stroke: black; fill: black;"},true)
 
+        ];
         break;
       }
-
-
-
-
-
       grupo.setAttributeNS(null, "transform", "matrix(1 0 0 1 0 0)");
 
       simbolo.onmousedown=selectElement;
@@ -179,10 +170,30 @@
     }
 
     desenhaConectores=function(a,i){
-      var origem=simbolos[a.origem];
-      var destino=simbolos[a.destino];
-      var conector=makeSVG(desenho,"line",{x1:origem.model.x, y1:origem.model.y,x2:destino.model.x,y2:destino.model.y,style:"pointer-events: none;stroke:black;stroke-width:1;"},true);
+      if (!a.proximo){
+        return;
+      }
+      var origem=simbolos[a.id];
+      var destino=simbolos[a.proximo];
+
+      dx=destino.childNodes[1].cx.baseVal.value+destino.transform.animVal[0].matrix.e;
+      dy=destino.childNodes[1].cy.baseVal.value+destino.transform.animVal[0].matrix.f;
+
+
+      ox=origem.childNodes[0].cx.baseVal.value+origem.transform.animVal[0].matrix.e;
+      oy=origem.childNodes[0].cy.baseVal.value+origem.transform.animVal[0].matrix.f;
+      var conector=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:black;stroke-width:3 "},true);
       conector.tipo="conector";
+
+      if (a.proximoFalso){
+        var destino=simbolos[a.proximoFalso];
+        ox=origem.childNodes[2].cx.baseVal.value+origem.transform.animVal[0].matrix.e;
+        oy=origem.childNodes[2].cy.baseVal.value+origem.transform.animVal[0].matrix.f;
+        dx=destino.childNodes[1].cx.baseVal.value+destino.transform.animVal[0].matrix.e;
+        dy=destino.childNodes[1].cy.baseVal.value+destino.transform.animVal[0].matrix.f;
+        var conector2=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:black;stroke-width:3 "},true);
+        conector2.tipo="conector";
+      }
     }
 
 
@@ -205,7 +216,7 @@
         element.removeChild(element.firstChild);
       }
       g.simbolos.forEach(desenhaSimbolo);
-      g.conectores.forEach(desenhaConectores);
+      g.simbolos.forEach(desenhaConectores);
     }
 
 
@@ -227,7 +238,7 @@
       selectedElement = evt.target.parentElement;
       setTimeout(function(){
         limpaLinhas();
-        $scope.fluxograma.conectores.forEach(desenhaConectores);
+        $scope.fluxograma.simbolos.forEach(desenhaConectores);
         $scope.$apply();
       },20);
     }
@@ -255,9 +266,72 @@
       desenha($scope.grafico);
     }
 
+    function estadoPorId(id){
+      for (i=0;i<$scope.fluxograma.simbolos.length;i++){
+        if ($scope.fluxograma.simbolos[i].id===id){
+          return $scope.fluxograma.simbolos[i];
+        }
+      }
+    }
+
+    var evalWithinContext = function(context, code)
+    {
+      var ct='';
+      for (c in context){
+        ct+=c+'='+context[c]+';';
+      }
+        return eval(ct+code);
+    };
+
+    $scope.passo=function(){
+      if (!$scope.estadoCorrente){
+        $scope.estadoCorrente=$scope.fluxograma.simbolos[0];
+      }
+      else{
+        $scope.estadoCorrente.emExecucao=false;
+        $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximo);
+      }
+      if ($scope.estadoCorrente){
+        if ($scope.estadoCorrente.tipo==='decisao'){
+          var result = evalWithinContext($scope.variaveis,$scope.estadoCorrente.teste);
+          console.log(result);
+          if (!result){
+            $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximoFalso);
+          }
+        }
+        if ($scope.estadoCorrente.tipo==='entrada'){
+          var resposta = prompt($scope.estadoCorrente.texto,0);
+          $scope.variaveis[$scope.estadoCorrente.variavel]=resposta;
+        }
+        if ($scope.estadoCorrente.tipo==='processamento'){
+          variavel=$scope.estadoCorrente.comando.split('=');
+          var result = evalWithinContext($scope.variaveis,variavel[1]);
+          $scope.variaveis[variavel[0]]=result;
+        }
+        if ($scope.estadoCorrente.tipo==='saida'){
+          if ($scope.estadoCorrente.variavel){
+            alert($scope.estadoCorrente.texto+' '+$scope.variaveis[$scope.estadoCorrente.variavel]);
+          }
+          else{
+            alert($scope.estadoCorrente.texto);
+          }
+        }
+
+        $scope.estadoCorrente.emExecucao=true;
+        desenha($scope.fluxograma);
+      }
+
+
+
+
+
+    }
+
 
     var desenho=document.getElementById("svgDesenho");
+
     desenha($scope.fluxograma);
+    $scope.variaveis={};
   });
   </script>
 </body>
