@@ -34,22 +34,14 @@
   <div  ng-controller="dadController">
     <div>
       <button ng-click="adiciona()">Adiciona</button>
-      <button ng-click="passo()">Passo</button>
+      <button ng-click="passo()">Executar</button>
       <h1>Variáveis:{{variaveis}}</h1>
-
-
     </div>
-
     <svg width="100%" height="900" id="svgDesenho" draggable="false">
-
     </svg>
   </div>
   <script>
-
   var app = angular.module('dadApp', []);
-
-
-
   app.controller('dadController', function($scope) {
     var selectedElement = 0;
     var currentX = 0;
@@ -66,8 +58,8 @@
         {id:"S3",tipo:"processamento",x:120,y:250,comando:"C=(F-32)*5/9",emExecucao:false,proximo:"S4"},
         {id:"S4",tipo:"saida",x:120,y:350,variavel:"C",texto:"A temperatura em C é",emExecucao:false,proximo:"S5"},
         {id:"S5",tipo:"decisao",x:120,y:450,teste:"C>25",emExecucao:false,proximo:"S7",proximoFalso:"S6"},
-        {id:"S6",tipo:"saida",x:120,y:550,variavel:"",texto:"FRIO",emExecucao:false,proximo:"S99"},
-        {id:"S7",tipo:"saida",x:320,y:550,variavel:"",texto:"CALOR",emExecucao:false,proximo:"S99"},
+        {id:"S6",tipo:"saida",x:320,y:550,variavel:"",texto:"FRIO",emExecucao:false,proximo:"S99"},
+        {id:"S7",tipo:"saida",x:120,y:550,variavel:"",texto:"CALOR",emExecucao:false,proximo:"S99"},
         {id:"S99",tipo:"fim",x:120,y:650,texto:"Fim",emExecucao:false}
       ]
     };
@@ -280,25 +272,33 @@
       for (c in context){
         ct+=c+'='+context[c]+';';
       }
-        return eval(ct+code);
+      return eval(ct+code);
     };
 
     $scope.passo=function(){
-      if (!$scope.estadoCorrente){
+      if (!$scope.estadoCorrente || !$scope.estadoCorrente.emExecucao){
         $scope.estadoCorrente=$scope.fluxograma.simbolos[0];
+        $scope.estadoCorrente.emExecucao=true;
+        desenha($scope.fluxograma);
       }
       else{
         $scope.estadoCorrente.emExecucao=false;
-        $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximo);
-      }
-      if ($scope.estadoCorrente){
         if ($scope.estadoCorrente.tipo==='decisao'){
           var result = evalWithinContext($scope.variaveis,$scope.estadoCorrente.teste);
-          console.log(result);
-          if (!result){
+          if (result){
+            $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximo);
+          }
+          else {
             $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximoFalso);
           }
+          $scope.estadoCorrente.emExecucao=true;
         }
+        else if ($scope.estadoCorrente.proximo){
+          $scope.estadoCorrente=estadoPorId($scope.estadoCorrente.proximo);
+          $scope.estadoCorrente.emExecucao=true;
+        }
+        desenha($scope.fluxograma);
+        console.log($scope.estadoCorrente);
         if ($scope.estadoCorrente.tipo==='entrada'){
           var resposta = prompt($scope.estadoCorrente.texto,0);
           $scope.variaveis[$scope.estadoCorrente.variavel]=resposta;
@@ -309,27 +309,20 @@
           $scope.variaveis[variavel[0]]=result;
         }
         if ($scope.estadoCorrente.tipo==='saida'){
+          var saida=$scope.estadoCorrente.texto;
           if ($scope.estadoCorrente.variavel){
-            alert($scope.estadoCorrente.texto+' '+$scope.variaveis[$scope.estadoCorrente.variavel]);
+            saida+=' '+$scope.variaveis[$scope.estadoCorrente.variavel];
           }
-          else{
-            alert($scope.estadoCorrente.texto);
-          }
+          alert(saida);
         }
-
-        $scope.estadoCorrente.emExecucao=true;
-        desenha($scope.fluxograma);
       }
-
-
-
-
-
+      if ($scope.estadoCorrente.emExecucao){
+        setTimeout($scope.passo, 1000);
+      }
+      $scope.$apply();
     }
 
-
     var desenho=document.getElementById("svgDesenho");
-
     desenha($scope.fluxograma);
     $scope.variaveis={};
   });
