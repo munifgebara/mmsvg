@@ -167,14 +167,11 @@
       }
       var origem=simbolos[a.id];
       var destino=simbolos[a.proximo];
-
       dx=destino.childNodes[1].cx.baseVal.value+destino.transform.animVal[0].matrix.e;
       dy=destino.childNodes[1].cy.baseVal.value+destino.transform.animVal[0].matrix.f;
-
-
       ox=origem.childNodes[0].cx.baseVal.value+origem.transform.animVal[0].matrix.e;
       oy=origem.childNodes[0].cy.baseVal.value+origem.transform.animVal[0].matrix.f;
-      var conector=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:black;stroke-width:3 "},true);
+      var conector=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:darkseagreen;stroke-width:5 "},true);
       conector.tipo="conector";
 
       if (a.proximoFalso){
@@ -183,7 +180,7 @@
         oy=origem.childNodes[2].cy.baseVal.value+origem.transform.animVal[0].matrix.f;
         dx=destino.childNodes[1].cx.baseVal.value+destino.transform.animVal[0].matrix.e;
         dy=destino.childNodes[1].cy.baseVal.value+destino.transform.animVal[0].matrix.f;
-        var conector2=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:black;stroke-width:3 "},true);
+        var conector2=makeSVG(desenho,"line",{x1:ox, y1:oy,x2:dx,y2:dy,style:"pointer-events: none;stroke:red;stroke-width:5 "},true);
         conector2.tipo="conector";
       }
     }
